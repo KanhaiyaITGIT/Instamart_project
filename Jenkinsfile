@@ -1,7 +1,9 @@
 pipeline {
     agent any
     environment {
-        PATH = "/opt/maven/bin"
+        MAVEN_HOME = "/opt/maven"
+        PATH = "${MAVEN_HOME}/bin:${env.PATH}"
+
     }
 
     stages {
@@ -18,11 +20,12 @@ pipeline {
                 sh "mvn clean install -Dmaven.test.skip=true"
                 echo "code built successfully"
             }
-
-            steps{
+        }
+        stage('code test') {
+            steps {
                 echo "code test"
                 sh "mvn test"
-                echo "code test successfully"
+                echo "code tested"
             }
         }
         stage('code report generate') {
@@ -40,7 +43,7 @@ pipeline {
                 echo "sonarqube analysis completed"
                 withSonarQubeEnv('sonar-server') {
                     withCredentials([string(credentialsId: 'sonar-credentials', variable: 'SONAR_TOKEN')]) {
-                        sh "${sonarHome}/bin/sonar-scanner -Dmaven.login=$SONAR_TOKEN"
+                        sh "${sonarHome}/bin/sonar-scanner -Dsonar.login=$SONAR_TOKEN"
                     }
                 }
                 echo "sonarqube analysis completed"
